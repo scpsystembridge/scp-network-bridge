@@ -1,1 +1,519 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SCP NETWORK: SYSTEM BRIDGE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0a0a0a;
+      --panel: #111111;
+      --border: #2a2a2a;
+      --border-light: #3a3a3a;
+      --white: #e8e8e8;
+      --gray: #888;
+      --gray-dim: #444;
+      --accent-bar: #1a1a1a;
+      --header-h: 90px;
+      --sidebar-w: 220px;
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── LOADER ── */
+    #loader {
+      position: fixed; inset: 0;
+      background: #000;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.6s ease;
+    }
+    #loader.out { opacity: 0; pointer-events: none; }
+
+    .ld-logo {
+      width: 100px; height: 100px;
+      animation: ld-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes ld-pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .ld-line {
+      font-size: 11px; letter-spacing: 3px;
+      color: var(--gray); margin-top: 24px;
+    }
+    .ld-bar-wrap {
+      width: 180px; height: 1px;
+      background: #222; margin-top: 14px; overflow: hidden;
+    }
+    .ld-bar {
+      height: 100%; background: #fff; width: 0;
+      animation: ld-fill 2.4s ease forwards;
+    }
+    @keyframes ld-fill { to { width: 100%; } }
+
+    /* ── HEADER ── */
+    #header {
+      height: var(--header-h);
+      background: var(--bg);
+      border-bottom: 2px solid var(--border-light);
+      display: flex; align-items: center;
+      padding: 0 24px; gap: 18px;
+      flex-shrink: 0;
+    }
+
+    #header svg { width: 56px; height: 56px; flex-shrink: 0; }
+
+    .hdr-text { display: flex; flex-direction: column; line-height: 1; }
+    .hdr-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 26px;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: #fff;
+    }
+    .hdr-sub {
+      font-size: 10px; letter-spacing: 4px;
+      color: var(--gray); margin-top: 5px;
+      text-transform: uppercase;
+    }
+
+    /* ── BODY LAYOUT ── */
+    #body {
+      display: flex; flex: 1; overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    #sidebar {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-light);
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sb-section-title {
+      background: var(--border-light);
+      color: var(--white);
+      padding: 8px 14px;
+      font-size: 12px; letter-spacing: 2px;
+      text-transform: uppercase;
+      border-bottom: 1px solid var(--border);
+      user-select: none;
+    }
+
+    .sb-item {
+      padding: 9px 20px;
+      color: var(--gray);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      font-size: 12px;
+      text-decoration: none;
+      display: block;
+    }
+    .sb-item:hover { background: #1c1c1c; color: var(--white); }
+    .sb-item.active { background: #1e1e1e; color: #fff; border-left: 2px solid #fff; padding-left: 18px; }
+
+    .sb-spacer { flex: 1; }
+
+    .sb-status {
+      padding: 14px;
+      border-top: 1px solid var(--border);
+      font-size: 10px; color: var(--gray-dim);
+      line-height: 1.8;
+    }
+    .sb-status .dot {
+      display: inline-block; width: 6px; height: 6px;
+      border-radius: 50%; background: #fff;
+      margin-right: 6px; vertical-align: middle;
+      animation: blink 2s step-start infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.1} }
+
+    /* ── CONTENT ── */
+    #content {
+      flex: 1; overflow-y: auto;
+      padding: 28px 32px;
+    }
+
+    /* Tab panels */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* Content window (like the screenshot) */
+    .cw {
+      border: 1px solid var(--border-light);
+      margin-bottom: 20px;
+      max-width: 860px;
+    }
+    .cw-title {
+      background: var(--border-light);
+      padding: 6px 14px;
+      font-size: 12px; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--white);
+      border-bottom: 1px solid var(--border);
+    }
+    .cw-body {
+      padding: 20px 24px;
+      color: #aaa; line-height: 1.8; font-size: 13px;
+    }
+    .cw-body p + p { margin-top: 10px; }
+    .cw-body a { color: var(--white); text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Two-column info grid */
+    .info-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 20px;
+      max-width: 860px;
+    }
+    .info-row .cw { border: none; margin: 0; background: var(--panel); }
+
+    /* Nav cards grid */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      margin-bottom: 20px;
+      max-width: 860px;
+    }
+    .nav-card {
+      background: var(--panel);
+      padding: 20px 22px;
+      cursor: pointer;
+      text-decoration: none;
+      display: flex; flex-direction: column; gap: 6px;
+      transition: background .15s;
+    }
+    .nav-card:hover { background: #1a1a1a; }
+    .nav-card-code { font-size: 10px; color: var(--gray-dim); letter-spacing: 3px; }
+    .nav-card-title { font-family: 'Rajdhani',sans-serif; font-weight:700; font-size:17px; color:#fff; letter-spacing:1px; text-transform:uppercase; }
+    .nav-card-desc { font-size: 11px; color: var(--gray); line-height: 1.6; }
+    .nav-card-arrow { margin-top: 10px; font-size: 11px; color: var(--gray-dim); }
+    .nav-card:hover .nav-card-arrow { color: var(--white); }
+
+    /* Page title */
+    .page-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 22px;
+      letter-spacing: 3px; text-transform: uppercase;
+      color: #fff; margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Join form area */
+    .join-option {
+      border: 1px solid var(--border-light);
+      margin-bottom: 14px; max-width: 600px;
+    }
+    .join-option .cw-title { cursor: pointer; display: flex; justify-content: space-between; }
+    .join-option .cw-title::after { content: '▸'; color: var(--gray); }
+    .join-option.open .cw-title::after { content: '▾'; }
+    .join-option-body { display: none; padding: 20px 24px; border-top: 1px solid var(--border); }
+    .join-option.open .join-option-body { display: block; }
+    .join-option-body p { color: #888; font-size: 12px; line-height: 1.8; }
+    .join-btn {
+      display: inline-block; margin-top: 14px;
+      padding: 8px 22px; border: 1px solid var(--border-light);
+      color: var(--white); font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+      text-decoration: none; transition: background .15s;
+      cursor: pointer; background: transparent;
+    }
+    .join-btn:hover { background: #1f1f1f; }
+
+    /* Footer bar */
+    #footer {
+      border-top: 1px solid var(--border);
+      padding: 8px 24px;
+      font-size: 10px; color: var(--gray-dim);
+      letter-spacing: 2px; flex-shrink: 0;
+      display: flex; justify-content: space-between;
+    }
+
+    /* Scanlines */
+    body::after {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 8888;
+      background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.012) 3px,rgba(255,255,255,.012) 4px);
+    }
+
+    /* Site hidden until loader done */
+    #site { display: flex; flex-direction: column; height: 100%; opacity: 0; transition: opacity .6s; }
+    #site.visible { opacity: 1; }
+
+    @media (max-width: 600px) {
+      #sidebar { width: 160px; }
+      #content { padding: 16px; }
+      .info-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <svg class="ld-logo" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="100" cy="100" r="90" stroke="white" stroke-width="8" fill="none"/>
+    <circle cx="100" cy="100" r="74" stroke="white" stroke-width="4" fill="none"/>
+    <rect x="84" y="4" width="32" height="18" fill="black" stroke="white" stroke-width="4"/>
+    <rect x="18" y="150" width="28" height="16" fill="black" stroke="white" stroke-width="4" transform="rotate(-45 32 158)"/>
+    <rect x="154" y="150" width="28" height="16" fill="black" stroke="white" stroke-width="4" transform="rotate(45 168 158)"/>
+    <line x1="100" y1="26" x2="100" y2="174" stroke="white" stroke-width="3"/>
+    <line x1="26" y1="100" x2="174" y2="100" stroke="white" stroke-width="3"/>
+    <ellipse cx="100" cy="100" rx="40" ry="74" stroke="white" stroke-width="3" fill="none"/>
+    <ellipse cx="100" cy="100" rx="74" ry="28" stroke="white" stroke-width="3" fill="none"/>
+    <path d="M 36 130 Q 100 68 164 130" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
+    <line x1="100" y1="95" x2="100" y2="130" stroke="white" stroke-width="4"/>
+    <line x1="72" y1="113" x2="72" y2="130" stroke="white" stroke-width="3"/>
+    <line x1="128" y1="113" x2="128" y2="130" stroke="white" stroke-width="3"/>
+    <path d="M 36 134 Q 60 128 84 134 Q 108 140 132 134 Q 156 128 164 134" stroke="white" stroke-width="2.5" fill="none"/>
+  </svg>
+  <div class="ld-line">ИНИЦИАЛИЗАЦИЯ // ISB-NETWORK</div>
+  <div class="ld-bar-wrap"><div class="ld-bar"></div></div>
+</div>
+
+<!-- SITE -->
+<div id="site">
+
+  <!-- HEADER -->
+  <div id="header">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="100" cy="100" r="90" stroke="white" stroke-width="8" fill="none"/>
+      <circle cx="100" cy="100" r="74" stroke="white" stroke-width="4" fill="none"/>
+      <rect x="84" y="4" width="32" height="18" fill="black" stroke="white" stroke-width="4"/>
+      <rect x="18" y="150" width="28" height="16" fill="black" stroke="white" stroke-width="4" transform="rotate(-45 32 158)"/>
+      <rect x="154" y="150" width="28" height="16" fill="black" stroke="white" stroke-width="4" transform="rotate(45 168 158)"/>
+      <line x1="100" y1="26" x2="100" y2="174" stroke="white" stroke-width="3"/>
+      <line x1="26" y1="100" x2="174" y2="100" stroke="white" stroke-width="3"/>
+      <ellipse cx="100" cy="100" rx="40" ry="74" stroke="white" stroke-width="3" fill="none"/>
+      <ellipse cx="100" cy="100" rx="74" ry="28" stroke="white" stroke-width="3" fill="none"/>
+      <path d="M 36 130 Q 100 68 164 130" stroke="white" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <line x1="100" y1="95" x2="100" y2="130" stroke="white" stroke-width="4"/>
+      <line x1="72" y1="113" x2="72" y2="130" stroke="white" stroke-width="3"/>
+      <line x1="128" y1="113" x2="128" y2="130" stroke="white" stroke-width="3"/>
+      <path d="M 36 134 Q 60 128 84 134 Q 108 140 132 134 Q 156 128 164 134" stroke="white" stroke-width="2.5" fill="none"/>
+    </svg>
+    <div class="hdr-text">
+      <div class="hdr-title">SCP NETWORK: SYSTEM BRIDGE</div>
+      <div class="hdr-sub">Межсетевой протокол ISB // Фан-проект // CC-BY-SA 3.0</div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div id="body">
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="sb-section-title">Навигация</div>
+      <a class="sb-item active" onclick="show('home')">Главная</a>
+      <div class="sb-section-title">Учреждения</div>
+      <a class="sb-item" onclick="show('zone06')">Зона 06-NR</a>
+      <a class="sb-item" onclick="show('suggest')">Предложить учреждение</a>
+      <div class="sb-section-title">База данных</div>
+      <a class="sb-item" onclick="show('objects')">Список объектов</a>
+      <div class="sb-section-title">Участие</div>
+      <a class="sb-item" onclick="show('join')">Стать участником</a>
+      <div class="sb-section-title">Регламент</div>
+      <a class="sb-item" onclick="show('rules')">Правила публикации</a>
+      <a class="sb-item" onclick="show('rules')">Правила поведения</a>
+      <a class="sb-item" onclick="show('admin')">Администрация</a>
+      <div class="sb-spacer"></div>
+      <div class="sb-status">
+        <span class="dot"></span>ISB: ONLINE<br/>
+        УЗЕЛ: ЗОНА-06-NR<br/>
+        ПРОТОКОЛ: АКТИВЕН
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="content">
+
+      <!-- HOME -->
+      <div class="tab-panel active" id="tab-home">
+        <div class="page-title">О нас</div>
+        <div class="cw">
+          <div class="cw-title">Фонд SCP</div>
+          <div class="cw-body">
+            <p>Фонд SCP — вымышленная секретная правительственная организация, занимающаяся обнаружением, содержанием и изучением аномальных объектов и явлений, представляющих угрозу нормальному существованию человечества.</p>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="cw">
+            <div class="cw-title">О нас</div>
+            <div class="cw-body">
+              <p>SCP NETWORK: BRIDGE — независимый фанатский проект. Мы не являемся официальным сайтом Фонда SCP и не связаны ни с какой реальной организацией. Весь контент создаётся энтузиастами.</p>
+            </div>
+          </div>
+          <div class="cw">
+            <div class="cw-title">Лицензия</div>
+            <div class="cw-body">
+              <p>Контент проекта SCP Foundation распространяется под лицензией <a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank">Creative Commons Attribution-ShareAlike 3.0 Unported (CC-BY-SA 3.0)</a>.</p>
+            </div>
+          </div>
+        </div>
+        <div class="cw">
+          <div class="cw-title">Ссылки</div>
+          <div class="cw-body">
+            <p><a href="https://t.me/" target="_blank">→ Telegram-канал проекта (ISB-сеть)</a></p>
+            <p><a onclick="show('join')" style="cursor:pointer">→ Как стать участником</a></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ZONE 06 -->
+      <div class="tab-panel" id="tab-zone06">
+        <div class="page-title">Зона 06-NR «Бастион»</div>
+        <div class="cw">
+          <div class="cw-title">Общие сведения</div>
+          <div class="cw-body">
+            <p>Зона 06-NR — подземный объект Фонда SCP, расположенный в горном массиве Сихрим. Является хостом и техническим узлом глобальной сети ISB.</p>
+            <p>Именно здесь проводятся наиболее масштабные эксперименты и глобальные ивенты сети.</p>
+          </div>
+        </div>
+        <div class="cw">
+          <div class="cw-title">Страница в разработке</div>
+          <div class="cw-body">
+            <p>Полный лор, документы и хаб Зоны 06-NR будут доступны в следующем обновлении.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUGGEST -->
+      <div class="tab-panel" id="tab-suggest">
+        <div class="page-title">Предложить учреждение</div>
+        <div class="cw">
+          <div class="cw-title">Голосование</div>
+          <div class="cw-body">
+            <p>Здесь будет опрос о следующем фанатском учреждении Фонда, которое войдёт в сеть BRIDGE.</p>
+            <p>Раздел в разработке.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- OBJECTS -->
+      <div class="tab-panel" id="tab-objects">
+        <div class="page-title">Список объектов</div>
+        <div class="cw">
+          <div class="cw-title">База данных // SCP-001 — SCP-999</div>
+          <div class="cw-body">
+            <p>Каталог аномальных объектов первой тысячи. Раздел находится в разработке.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- JOIN -->
+      <div class="tab-panel" id="tab-join">
+        <div class="page-title">Стать участником</div>
+        <div class="join-option" id="jo-author">
+          <div class="cw-title" onclick="toggleJoin('jo-author')">Автор — публикация статей и объектов</div>
+          <div class="join-option-body">
+            <p>Пишешь статьи, создаёшь объекты SCP, дополняешь лор. Материалы проходят модерацию перед публикацией. Необходимо ознакомиться с правилами публикации.</p>
+            <a class="join-btn" href="https://t.me/" target="_blank">Подать заявку</a>
+          </div>
+        </div>
+        <div class="join-option" id="jo-reader">
+          <div class="cw-title" onclick="toggleJoin('jo-reader')">Читатель — комментарии и оценки</div>
+          <div class="join-option-body">
+            <p>Читаешь материалы проекта, оставляешь комментарии и ставишь оценки. Необходимо ознакомиться с правилами поведения.</p>
+            <a class="join-btn" href="https://t.me/" target="_blank">Зарегистрироваться</a>
+          </div>
+        </div>
+        <div class="join-option" id="jo-support">
+          <div class="cw-title" onclick="toggleJoin('jo-support')">Саппорт — участник Telegram-сети ISB</div>
+          <div class="join-option-body">
+            <p>Ведёшь канал в Telegram от лица персонажа Фонда SCP. Участвуешь в интерактах, ивентах и ролевых событиях сети.</p>
+            <a class="join-btn" href="https://t.me/" target="_blank">Перейти в Telegram</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- RULES -->
+      <div class="tab-panel" id="tab-rules">
+        <div class="page-title">Регламент</div>
+        <div class="cw">
+          <div class="cw-title">Правила публикации</div>
+          <div class="cw-body">
+            <p>Все материалы проверяются модерацией перед публикацией. Обязательны: соблюдение канона, грамотность текста, уважение к лицензии CC-BY-SA. При использовании чужих материалов — указание авторства.</p>
+          </div>
+        </div>
+        <div class="cw">
+          <div class="cw-title">Правила поведения</div>
+          <div class="cw-body">
+            <p>Уважительное общение между участниками. Разграничение роли персонажа и личности автора. Токсичность в адрес участников как личностей — причина деавторизации.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="tab-panel" id="tab-admin">
+        <div class="page-title">Администрация</div>
+        <div class="cw">
+          <div class="cw-title">Контакты</div>
+          <div class="cw-body">
+            <p>По вопросам модерации, сотрудничества и участия обращайтесь через <a href="https://t.me/" target="_blank">Telegram-канал проекта</a>.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /body -->
+
+  <div id="footer">
+    <span>SCP NETWORK: BRIDGE // ФАН-ПРОЕКТ</span>
+    <span>CC-BY-SA 3.0 // НЕ ОФИЦИАЛЬНЫЙ САЙТ</span>
+  </div>
+
+</div><!-- /site -->
+
+<script>
+  // Loader
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('loader').classList.add('out');
+      setTimeout(() => {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('site').classList.add('visible');
+      }, 650);
+    }, 2600);
+  });
+
+  // Tab switching
+  function show(id) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+    const panel = document.getElementById('tab-' + id);
+    if (panel) panel.classList.add('active');
+    event && event.target && event.target.classList.add('active');
+  }
+
+  // Sidebar click active state
+  document.querySelectorAll('.sb-item').forEach(item => {
+    item.addEventListener('click', function() {
+      document.querySelectorAll('.sb-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // Join accordion
+  function toggleJoin(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle('open');
+  }
+</script>
+</body>
+</html>
