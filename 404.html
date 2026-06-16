@@ -1,1 +1,208 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>404 — SCP NETWORK: SYSTEM BRIDGE</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico"/>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg: #0a0a0a;
+      --border: #2a2a2a;
+      --border-light: #3a3a3a;
+      --white: #e8e8e8;
+      --gray: #888;
+      --gray-dim: #444;
+      --header-h: 90px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Scanlines */
+    body::after {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 8888;
+      background: repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,.012) 3px,rgba(255,255,255,.012) 4px);
+    }
+
+    /* Header */
+    #header {
+      height: var(--header-h);
+      background: var(--bg);
+      border-bottom: 2px solid var(--border-light);
+      display: flex; align-items: center;
+      padding: 0 24px; gap: 18px;
+      flex-shrink: 0;
+    }
+    .hdr-title {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700; font-size: 26px;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: #fff;
+    }
+    .hdr-sub {
+      font-size: 10px; letter-spacing: 4px;
+      color: var(--gray); margin-top: 5px;
+      text-transform: uppercase;
+    }
+
+    /* Main */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .err-code {
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 96px;
+      color: #1e1e1e;
+      letter-spacing: 8px;
+      line-height: 1;
+      user-select: none;
+      position: relative;
+    }
+
+    /* Glitch effect */
+    .err-code::before,
+    .err-code::after {
+      content: '404';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+    }
+    .err-code::before {
+      color: #2a2a2a;
+      animation: glitch-1 3.5s infinite steps(1);
+    }
+    .err-code::after {
+      color: #333;
+      animation: glitch-2 3.5s infinite steps(1);
+    }
+    @keyframes glitch-1 {
+      0%,90%,100% { clip-path: none; transform: none; }
+      92% { clip-path: inset(30% 0 50% 0); transform: translateX(-4px); }
+      94% { clip-path: inset(60% 0 10% 0); transform: translateX(3px); }
+    }
+    @keyframes glitch-2 {
+      0%,90%,100% { clip-path: none; transform: none; }
+      93% { clip-path: inset(10% 0 70% 0); transform: translateX(4px); }
+      95% { clip-path: inset(50% 0 20% 0); transform: translateX(-3px); }
+    }
+
+    .err-label {
+      font-size: 11px; letter-spacing: 4px;
+      color: var(--gray); margin-top: 16px;
+      text-transform: uppercase;
+    }
+
+    .err-divider {
+      width: 1px; height: 40px;
+      background: var(--border-light);
+      margin: 24px auto;
+    }
+
+    .err-msg {
+      font-size: 12px; color: var(--gray);
+      letter-spacing: 1px; line-height: 2;
+      max-width: 420px;
+    }
+
+    .err-msg span {
+      color: #555;
+    }
+
+    .err-actions {
+      display: flex; gap: 12px;
+      margin-top: 32px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .err-btn {
+      padding: 9px 24px;
+      border: 1px solid var(--border-light);
+      color: var(--white);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px; letter-spacing: 2px;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: background .15s;
+      background: transparent;
+    }
+    .err-btn:hover { background: #1a1a1a; }
+    .err-btn.primary {
+      border-color: #555;
+    }
+
+    /* Blink cursor */
+    .cursor {
+      display: inline-block;
+      width: 8px; height: 14px;
+      background: var(--gray-dim);
+      margin-left: 4px;
+      vertical-align: middle;
+      animation: blink 1s step-start infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* Footer */
+    #footer {
+      border-top: 1px solid var(--border);
+      padding: 8px 24px;
+      font-size: 10px; color: var(--gray-dim);
+      letter-spacing: 2px;
+      display: flex; justify-content: space-between;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header">
+    <img src="logo.png" alt="логотип" style="width:56px;height:56px;object-fit:contain;"/>
+    <div>
+      <div class="hdr-title">SCP NETWORK: SYSTEM BRIDGE</div>
+      <div class="hdr-sub">Межсетевой протокол ISB // Фан-проект // CC-BY-SA 3.0</div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div class="err-code">404</div>
+    <div class="err-label">Сигнал не найден<span class="cursor"></span></div>
+    <div class="err-divider"></div>
+    <div class="err-msg">
+      Запрашиваемый узел не обнаружен в сети ISB.<br/>
+      <span>Возможно, страница была перемещена,<br/>
+      удалена или никогда не существовала.</span>
+    </div>
+    <div class="err-actions">
+      <a class="err-btn primary" href="/">→ Вернуться на главную</a>
+      <a class="err-btn" href="https://t.me/scp_network" target="_blank">→ Telegram-канал</a>
+    </div>
+  </div>
+
+  <div id="footer">
+    <span>SCP NETWORK: BRIDGE // ФАН-ПРОЕКТ</span>
+    <span>CC-BY-SA 3.0 // НЕ ОФИЦИАЛЬНЫЙ САЙТ</span>
+  </div>
+
+</body>
+</html>
